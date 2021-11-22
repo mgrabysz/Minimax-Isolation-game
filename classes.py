@@ -62,6 +62,9 @@ class State:
     def successors(self):
         return self._successors
 
+    def successors_initialized(self):
+        return self._successors_initialized
+
     def initialize_successors(self):
         """
         Sets attribute successors to list of successors
@@ -241,8 +244,12 @@ class State:
         if self._is_terminal or depth == 0:
             return self._find_payoff() if self._payoff == 0 else self._payoff
 
+        rates = []
         for successor in self._successors:
-            pass
+            rate = successor.minimax(depth-1)
+            rates.append(rate)
+
+        return max(rates) if self._max_move else min(rates)
 
 
 class Board:
