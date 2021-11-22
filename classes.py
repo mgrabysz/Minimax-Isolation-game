@@ -21,6 +21,9 @@ class State:
         self._parent = parent
         self._max_move = max_move
         self._successors = None
+        self._is_terminal = False   # not determined yet
+        self._successors_initialized = False
+        self._payoff = 0    # not determined yet
 
         if parent:
             # state has previous state
@@ -62,27 +65,37 @@ class State:
     def initialize_successors(self):
         """
         Sets attribute successors to list of successors
+        Sets successors_initialized True to avoid unnecessary
+        finding successors in the future
         """
         self._successors = self.find_successors()
+        self._successors_initialized = True
+        if len(self._successors) == 0:
+            self._is_terminal = True
 
-    def find_payoff(self):
-        if not self._successors:    # if successors are not found yet
-            self.initialize_successors()
-
+    def _find_payoff(self):
+        """
+        Finds payoff of state
+        Sets _payoff attribute
+        When calling this function, successors have to be initialized before
+        """
         if self._max_move:
-            if len(self._successors) == 0:
+            if self._is_terminal:
                 # max has lost, self is terminal state
-                return -10
+                payoff = -10
             else:
                 # return number of possible moves for max
-                return len(self._successors)
+                payoff = len(self._successors)
 
         else:   # if min move
-            if len(self._successors) == 0:
+            if self._is_terminal:
                 # min has lost, self is terminal state
-                return 10
+                payoff = 10
             else:
-                return (-1) * len(self._successors)
+                payoff = (-1) * len(self._successors)
+
+        self._payoff = payoff
+        return payoff
 
     def _create_successor(self, new_pos, max_move):
         if max_move:
@@ -101,7 +114,7 @@ class State:
         )
         return successor
 
-    def find_successors(self):
+    def _find_successors(self):
         """
         Function finds all possible states available from current state
         Returns a list of State() objects
@@ -216,6 +229,20 @@ class State:
             to_return += row
 
         return to_return
+
+    def minimax(self, depth):
+        """
+        Performs minimax algorithm
+        State evaluates itself
+        """
+        if not self._successors_initialized:
+            self.initialize_successors()
+
+        if self._is_terminal or depth == 0:
+            return self._find_payoff() if self._payoff == 0 else self._payoff
+
+        for successor in self._successors:
+            pass
 
 
 class Board:

@@ -34,6 +34,9 @@ class Game():
             self._min_pos = min_pos
 
         self._max_move = max_move
+
+        # param tactic determines if player uses minmax tactic
+        # or not (plays randomly)
         self._max_tactic = max_tactic
         self._min_tactic = min_tactic
 
