@@ -29,6 +29,8 @@ class Game():
         is True if game is finished
     _max_won : bool
         is True if max has won (otherwise min has won)
+    _print_moves : bool
+        if is True, every move will be printed
     """
 
     def __init__(
@@ -40,6 +42,7 @@ class Game():
         min_tactic=False,
         max_move=True,
         depth=2,
+        print_moves=False
     ):
 
         if not max_pos:
@@ -61,6 +64,8 @@ class Game():
         self._min_tactic = min_tactic
         self._is_finished = False
         self._max_won = False  # not valid while is_finished is False
+        self._depth = depth
+        self._print_moves = print_moves
 
         self._initial_state = State(
             size=size,
@@ -71,6 +76,9 @@ class Game():
 
         self._current_state = self._initial_state
         self._current_state.initialize_successors()
+
+        if self._print_moves:
+            print(self._current_state)
 
     def initial_state(self):
         return self._initial_state
@@ -97,7 +105,6 @@ class Game():
                 possible_states = self._current_state.successors()
                 new_state = choice(possible_states)
                 self._current_state = new_state
-                print(self._current_state)
 
         else:   # min move
             if self._min_tactic:
@@ -109,7 +116,9 @@ class Game():
                 possible_states = self._current_state.successors()
                 new_state = choice(possible_states)
                 self._current_state = new_state
-                print(self._current_state)
+
+        if self._print_moves:
+            print(self._current_state)
 
         self._max_move = not self._max_move
         self._current_state.initialize_successors()
@@ -124,21 +133,21 @@ class Game():
         Function assumes that current state is initialized
         """
         current_best_state = choice(self._current_state.successors())
-        current_best_rate = current_best_state.minimax()
+        current_best_rate = current_best_state.minimax(self._depth)
 
         for successor in self._current_state.successors():
-            rate = successor.minimax()
+            rate = successor.minimax(self._depth)
 
             if rate == current_best_rate and random() < 0.5:
                 current_best_state = successor
-                current_best_rate = current_best_state.minimax()
+                current_best_rate = current_best_state.minimax(self._depth)
             elif self._max_move:
                 if rate > current_best_rate:
                     current_best_state = successor
-                    current_best_rate = current_best_state.minimax()
+                    current_best_rate = current_best_state.minimax(self._depth)
             else:    # min move
                 if rate < current_best_rate:
                     current_best_state = successor
-                    current_best_rate = current_best_state.minimax()
+                    current_best_rate = current_best_state.minimax(self._depth)
 
         self._current_state = current_best_state
