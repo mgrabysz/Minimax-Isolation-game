@@ -1,23 +1,22 @@
-from game import (
-    Game,
+from classes import (
     Board,
     State,
-    PlayerPositionOutOfRange
 )
+from game import Game, PlayerPositionOutOfRange
 import pytest
 
 
-def test_initialize_game_default():
-    game = Game()
-    expected_board = [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-    ]
-    assert game.table() == expected_board
-    assert game.max_pos() == (0, 0)
-    assert game.min_pos() == (3, 3)
+# def test_initialize_game_default():
+#     game = Game()
+#     expected_board = [
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#     ]
+#     assert game.table() == expected_board
+#     assert game.max_pos() == (0, 0)
+#     assert game.min_pos() == (3, 3)
 
 
 def test_player_out_of_range():
@@ -51,7 +50,7 @@ def test_state_initialize():
 
 def test_state_successors():
     state = State(4, max_pos=(3, 3), min_pos=(0, 0), max_move=True)
-    successors = state.find_successors()
+    successors = state._find_successors()
     assert len(successors) == 3
     n_suc_expected_table = [
         [1, 0, 0, 0],
@@ -83,5 +82,30 @@ def test_state_successors():
 
 def test_find_payoff():
     state = State(4, max_pos=(3, 3), min_pos=(0, 0), max_move=True)
-    payoff = state.find_payoff()
+    state.initialize_successors()
+    payoff = state._find_payoff()
+    assert payoff == 3
+
+
+def test_minimax_depth_0_max_move():
+    state = State(4, max_pos=(3, 3), min_pos=(0, 0), max_move=True)
+    payoff = state.minimax(0)
+    assert payoff == 3
+
+
+def test_minimax_depth_0_min_move():
+    state = State(4, max_pos=(3, 3), min_pos=(0, 0), max_move=False)
+    payoff = state.minimax(0)
+    assert payoff == -3
+
+
+def test_minimax_depth_1_max_move():
+    state = State(4, max_pos=(3, 3), min_pos=(0, 0), max_move=True)
+    payoff = state.minimax(1)
+    assert payoff == -3
+
+
+def test_minimax_depth_1_min_move():
+    state = State(4, max_pos=(3, 3), min_pos=(0, 0), max_move=False)
+    payoff = state.minimax(1)
     assert payoff == 3

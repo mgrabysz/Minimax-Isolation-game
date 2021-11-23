@@ -71,7 +71,7 @@ class State:
         Sets successors_initialized True to avoid unnecessary
         finding successors in the future
         """
-        self._successors = self.find_successors()
+        self._successors = self._find_successors()
         self._successors_initialized = True
         if len(self._successors) == 0:
             self._is_terminal = True

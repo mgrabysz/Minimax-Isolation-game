@@ -1,5 +1,5 @@
 from classes import State
-from random import choice
+from random import choice, random
 
 
 class PlayerPositionOutOfRange(Exception):
@@ -8,6 +8,29 @@ class PlayerPositionOutOfRange(Exception):
 
 
 class Game():
+    """
+    Attributes
+    ----------
+    _max_pos : tuple
+        position of player max
+    _min_pos : tuple
+        position of player min
+    _max_move : bool
+        is True if max player is on move
+    _max_tactic : bool
+        is True if max player uses minimax algorithm
+    _min_tactic : bool
+        is True if min player uses minimax algorithm
+    _initial_state : State
+        initial state
+    _current_state : State
+        current state
+    _is_finished : bool
+        is True if game is finished
+    _max_won : bool
+        is True if max has won (otherwise min has won)
+    """
+
     def __init__(
         self,
         size=4,
@@ -34,11 +57,10 @@ class Game():
             self._min_pos = min_pos
 
         self._max_move = max_move
-
-        # param tactic determines if player uses minmax tactic
-        # or not (plays randomly)
         self._max_tactic = max_tactic
         self._min_tactic = min_tactic
+        self._is_finished = False
+        self._max_won = False  # not valid while is_finished is False
 
         self._initial_state = State(
             size=size,
@@ -48,14 +70,26 @@ class Game():
         )
 
         self._current_state = self._initial_state
+        self._current_state.initialize_successors()
 
     def initial_state(self):
         return self._initial_state
 
+    def is_finished(self):
+        return self._is_finished
+
+    def max_won(self):
+        return self._max_won
+
     def make_move(self):
+        """
+        Makes move of the actual player
+        Using minimax algorithm if player_tactic is True
+        Otherwise randomly
+        """
         if self._max_move:
             if self._max_tactic:
-                pass
+                self._move_minimax()
             else:   # max plays randomly
                 if not self._current_state.successors():
                     self._current_state.initialize_successors()
@@ -67,7 +101,7 @@ class Game():
 
         else:   # min move
             if self._min_tactic:
-                pass
+                self._move_minimax()
             else:   # min plays randomly
                 if not self._current_state.successors():
                     self._current_state.initialize_successors()
@@ -78,6 +112,33 @@ class Game():
                 print(self._current_state)
 
         self._max_move = not self._max_move
+        self._current_state.initialize_successors()
 
-    def minimax(self):
-        pass
+        if not self._current_state.successors():
+            self._is_finished = True
+            self._max_won = False if self._max_move else True
+
+    def _move_minimax(self):
+        """
+        This function should not be called by user
+        Function assumes that current state is initialized
+        """
+        current_best_state = choice(self._current_state.successors())
+        current_best_rate = current_best_state.minimax()
+
+        for successor in self._current_state.successors():
+            rate = successor.minimax()
+
+            if rate == current_best_rate and random() < 0.5:
+                current_best_state = successor
+                current_best_rate = current_best_state.minimax()
+            elif self._max_move:
+                if rate > current_best_rate:
+                    current_best_state = successor
+                    current_best_rate = current_best_state.minimax()
+            else:    # min move
+                if rate < current_best_rate:
+                    current_best_state = successor
+                    current_best_rate = current_best_state.minimax()
+
+        self._current_state = current_best_state
