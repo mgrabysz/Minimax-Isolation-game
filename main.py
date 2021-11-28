@@ -1,44 +1,60 @@
+import json
+import os
 from game import Game
+# ========================== 1000 games ===================================
 
-# ================= single game with printing moves =======================
+max_count = 0
+min_count = 0
 
-game = Game(
-    size=5,
-    max_tactic='user',
-    min_tactic='minimax',
-    depth=5,
-    max_move=False,
-    print_moves=True
-    )
+for _ in range(1000):
+    game = Game(
+        size=4,
+        max_tactic='minimax',
+        min_tactic='random',
+        depth=5,
+        max_move=True
+        )
 
-while not game.is_finished():
-    game.make_move()
+# =============== storing data ==================
+    data = {
+        'size': game.size(),
+        'max_pos': game.max_pos(),
+        'min_pos': game.min_pos(),
+        'max_tactic': game.max_tactic(),
+        'min_tactic': game.min_tactic(),
+        'max_move': game.max_move(),
+        'depth': game.depth()
+    }
 
-winner = "max" if game.max_won() else "min"
-print("And the winner is " + winner)
+# =============== game execution ==============
 
+    while not game.is_finished():
+        game.make_move()
 
-# ========================== 100 games ===================================
+    if game.max_won():
+        max_count += 1
+    else:
+        min_count += 1
 
-# max_count = 0
-# min_count = 0
+data['max_result'] = max_count
+data['min_result'] = min_count
 
-# for _ in range(100):
-#     game = Game(
-#         size=5,
-#         max_tactic='user',
-#         min_tactic='random',
-#         depth=2,
-#         max_move=True
-#         )
+print("Max result: ", max_count)
+print("Min result: ", min_count)
 
-#     while not game.is_finished():
-#         game.make_move()
+# ================== saving to file ==================
 
-#     if game.max_won():
-#         max_count += 1
-#     else:
-#         min_count += 1
+fname = "info.json"
 
-# print("Max result: ", max_count)
-# print("Min result: ", min_count)
+if not os.path.isfile(fname):
+    a = []
+    a.append(data)
+    with open(fname, mode='w') as file_handle:
+        file_handle.write(json.dumps(a, indent=2))
+else:
+    with open(fname) as feedsjson:
+        feeds = json.load(feedsjson)
+
+    feeds.append(data)
+    with open(fname, mode='w') as file_handle:
+        file_handle.write(json.dumps(feeds, indent=2))

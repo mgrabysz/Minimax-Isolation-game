@@ -6,19 +6,6 @@ from game import Game, PlayerPositionOutOfRange
 import pytest
 
 
-# def test_initialize_game_default():
-#     game = Game()
-#     expected_board = [
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#     ]
-#     assert game.table() == expected_board
-#     assert game.max_pos() == (0, 0)
-#     assert game.min_pos() == (3, 3)
-
-
 def test_player_out_of_range():
     with pytest.raises(PlayerPositionOutOfRange):
         Game(max_pos=(4, 2))

@@ -130,9 +130,6 @@ class Game():
             if self._max_tactic == "minimax":
                 self._move_minimax()
             elif self._max_tactic == "random":
-                if not self._current_state.successors():
-                    self._current_state.initialize_successors()
-
                 possible_states = self._current_state.successors()
                 new_state = choice(possible_states)
                 self._current_state = new_state
@@ -143,9 +140,6 @@ class Game():
             if self._min_tactic == "minimax":
                 self._move_minimax()
             elif self._min_tactic == "random":
-                if not self._current_state.successors():
-                    self._current_state.initialize_successors()
-
                 possible_states = self._current_state.successors()
                 new_state = choice(possible_states)
                 self._current_state = new_state
