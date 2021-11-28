@@ -1,5 +1,5 @@
 from classes import State
-from random import choice, random
+from random import choice
 
 
 class PlayerPositionOutOfRange(Exception):
@@ -17,10 +17,10 @@ class Game():
         position of player min
     _max_move : bool
         is True if max player is on move
-    _max_tactic : bool
-        is True if max player uses minimax algorithm
-    _min_tactic : bool
-        is True if min player uses minimax algorithm
+    _max_tactic : string
+        "random", "minimax" or "user"
+    _min_tactic : string
+        "random", "minimax" or "user"
     _initial_state : State
         initial state
     _current_state : State
@@ -38,8 +38,8 @@ class Game():
         size=4,
         max_pos=None,
         min_pos=None,
-        max_tactic=False,
-        min_tactic=False,
+        max_tactic="random",
+        min_tactic="random",
         max_move=True,
         depth=2,
         print_moves=False
@@ -59,9 +59,15 @@ class Game():
                 raise PlayerPositionOutOfRange
             self._min_pos = min_pos
 
-        self._max_move = max_move
+        if max_tactic not in ["random", "minimax", "user"]:
+            raise Exception
+        if max_tactic not in ["random", "minimax", "user"]:
+            raise Exception
+
         self._max_tactic = max_tactic
         self._min_tactic = min_tactic
+        self._size = size
+        self._max_move = max_move
         self._is_finished = False
         self._max_won = False  # not valid while is_finished is False
         self._depth = depth
@@ -80,6 +86,8 @@ class Game():
         if self._print_moves:
             print(self._current_state)
 
+# =================== getters =======================
+
     def initial_state(self):
         return self._initial_state
 
@@ -89,6 +97,29 @@ class Game():
     def max_won(self):
         return self._max_won
 
+    def max_tactic(self):
+        return self._max_tactic
+
+    def min_tactic(self):
+        return self._min_tactic
+
+    def max_move(self):
+        return self._max_move
+
+    def depth(self):
+        return self._depth
+
+    def size(self):
+        return self._size
+
+    def max_pos(self):
+        return self._max_pos
+
+    def min_pos(self):
+        return self._min_pos
+
+# ==================== main methods =======================
+
     def make_move(self):
         """
         Makes move of the actual player
@@ -96,26 +127,30 @@ class Game():
         Otherwise randomly
         """
         if self._max_move:
-            if self._max_tactic:
+            if self._max_tactic == "minimax":
                 self._move_minimax()
-            else:   # max plays randomly
+            elif self._max_tactic == "random":
                 if not self._current_state.successors():
                     self._current_state.initialize_successors()
 
                 possible_states = self._current_state.successors()
                 new_state = choice(possible_states)
                 self._current_state = new_state
+            else:   # user plays
+                self._move_user()
 
         else:   # min move
-            if self._min_tactic:
+            if self._min_tactic == "minimax":
                 self._move_minimax()
-            else:   # min plays randomly
+            elif self._min_tactic == "random":
                 if not self._current_state.successors():
                     self._current_state.initialize_successors()
 
                 possible_states = self._current_state.successors()
                 new_state = choice(possible_states)
                 self._current_state = new_state
+            else:   # user plays
+                self._move_user()
 
         if self._print_moves:
             print(self._current_state)
@@ -132,22 +167,76 @@ class Game():
         This function should not be called by user
         Function assumes that current state is initialized
         """
-        current_best_state = choice(self._current_state.successors())
-        current_best_rate = current_best_state.minimax(self._depth)
+        current_best_states = []
+        random_state = choice(self._current_state.successors())
+        current_best_states.append(random_state)
+        current_best_rate = random_state.minimax(self._depth)
 
         for successor in self._current_state.successors():
             rate = successor.minimax(self._depth)
 
-            if rate == current_best_rate and random() < 0.5:
-                current_best_state = successor
-                current_best_rate = current_best_state.minimax(self._depth)
+            if rate == current_best_rate:
+                current_best_states.append(successor)
             elif self._max_move:
                 if rate > current_best_rate:
-                    current_best_state = successor
-                    current_best_rate = current_best_state.minimax(self._depth)
+                    current_best_states.clear()
+                    current_best_states.append(successor)
+                    current_best_rate = successor.minimax(self._depth)
             else:    # min move
                 if rate < current_best_rate:
-                    current_best_state = successor
-                    current_best_rate = current_best_state.minimax(self._depth)
+                    current_best_states.clear()
+                    current_best_states.append(successor)
+                    current_best_rate = successor.minimax(self._depth)
 
-        self._current_state = current_best_state
+        self._current_state = choice(current_best_states)
+
+    def _move_user(self):
+        """
+        This function should not be called by user
+        Function assumes that current state is initialized
+        """
+
+        directions = {}
+
+        if self._max_move:
+            curr_pos = self._current_state.max_pos()
+        else:
+            curr_pos = self._current_state.min_pos()
+
+        for successor in self._current_state.successors():
+            if self._max_move:
+                new_pos = successor.max_pos()
+            else:
+                new_pos = successor.min_pos()
+
+            vector = (new_pos[0] - curr_pos[0], new_pos[1] - curr_pos[1])
+
+            if vector == (0, -1):   # N
+                dir = 'N'
+            elif vector == (1, -1):
+                dir = 'NE'
+            elif vector == (1, 0):
+                dir = 'E'
+            elif vector == (1, 1):
+                dir = 'SE'
+            elif vector == (0, 1):
+                dir = 'S'
+            elif vector == (-1, 1):
+                dir = 'SW'
+            elif vector == (-1, 0):
+                dir = 'W'
+            elif vector == (-1, -1):
+                dir = 'NW'
+            else:
+                raise Exception
+
+            directions[dir] = successor
+
+        input_is_valid = False
+
+        while not input_is_valid:
+            user_input = input("> ")
+            if user_input in directions:
+                input_is_valid = True
+
+        self._current_state = directions[user_input]
